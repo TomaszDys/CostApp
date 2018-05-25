@@ -1,0 +1,279 @@
+﻿@model IEnumerable<TomaszDyśkoLab6Zad1.Models.Product>
+<div class="container" style="padding-top:40px">
+    <div class="row" style="font-size:15px">
+        <h1 style="font-weight:bold">Twoje wydatki: </h1>
+        <!--Tabela z wartościami z bazy odświerzana przez skrypt oraz label wyszukiwania-->
+        <div class="col-md-8">
+            <input type="text" class="input-lg" style="margin-bottom:5px" id="myInput" onkeyup="myFunction()" placeholder="Wyszukaj po nazwie...">
+            <table id="results-table" class="myTable table-bordered table table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Id</th>
+                        <th>Nazwa Produktu</th>
+                        <th>Ilość</th>
+                        <th>Cena</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <!--Panel z całkowitymi kosztami-->
+        <div class="col-md-4 text-center">
+            <div class="panel panel-success ">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h2>Całkowity koszt</h2>
+                        </div>
+                    </div>
+                </div>
+                <h3 style="padding:20px;font-weight:600" id="all"></h3>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <!--Panel zarządzania tabelą-->
+        <div class="panel panel-default ">
+            <div class="panel-heading"> 
+                <h2>Zarządzaj</h2> 
+            </div>
+            <div class="row" style="padding:20px">
+                <!--Panel dodawania produktu-->
+                <div class="col-md-4">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Dodaj produkt</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <form style="padding:10px;" id="form1">
+                            <div>
+                                <label for="name">Nazwa</label>
+                            </div>
+                            <div>
+                                <input id="name" class="input-sm" name="Name" type="text" required />
+                            </div>
+                            <div>
+                                <label for="number">Ilość sztuk</label>
+                            </div>
+                            <div>
+                                <input id="number" class="input-sm" name="NumberOfPieces" type="number" required />
+                            </div>
+                            <div>
+                                <label for="price">Cena za sztukę</label>
+                            </div>
+                            <div>
+                                <input id="price" class="input-sm" name="Price" type="number" step="0.01" required />
+                            </div>
+                            <div>
+                                <br />
+                                <input id="btn1" class="btn btn-default" type="submit" value="Dodaj" />
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+                <!--Panel usuwania produktu-->
+                <div class="col-md-4">
+                    <div class="panel panel-danger">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Usuń produkt</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <form style="padding:10px;" id="form2">
+                            <div>
+                                <label for="name">Id</label>
+                            </div>
+                            <div>
+                                <input id="id" class="input-sm" name="id" type="number" step="0.01" required />
+                            </div>
+                            <div>
+                                <br />
+                                <input id="btn2" class="btn btn-default" type="submit" value="Usuń" />
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+                <!--Panel edytowania produktu-->
+                <div class="col-md-4">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h4>Edytuj produkt</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <form style="padding:10px;" id="form3">
+                            <div>
+                                <label for="Ide">Id edytowanej pozycji</label>
+                            </div>
+                            <div>
+                                <input id="Ide" class="input-sm" name="Ide" type="text" required />
+                            </div>
+                            <div>
+                                <label>Wpisz nowe dane produktu:</label>
+                            </div>
+                            <div>
+                                <label for="name2">Nazwa</label>
+                            </div>
+                            <div>
+                                <input id="name2" class="input-sm" name="Name" type="text" required />
+                            </div>
+                            <div>
+                                <label for="number2">Ilość sztuk</label>
+                            </div>
+                            <div>
+                                <input id="number2" class="input-sm" name="NumberOfPieces" type="number" required />
+                            </div>
+                            <div>
+                                <label for="price2">Cena za sztukę</label>
+                            </div>
+                            <div>
+                                <input id="price2" class="input-sm" name="Price" type="number" step="0.01" required />
+                            </div>
+                            <div>
+                                <br />
+                                <input id="btn3" class="btn btn-default" type="submit" value="Edytuj" />
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Skrypty dodawania, usuwania, edytowania, odświerzania tabeli-->
+<script>
+    $(document).ready(function () {
+        //Odświerzanie tablicy przez wywołanie zapytania GET
+        function refresh() {
+            var url = "http://localhost:63619/api/Products/";
+            $.ajax(url).then(function (data) {
+                refreshResults(data);
+            }).catch(function (e) {
+                console.log(e);
+            });
+        }
+        refresh();
+         //Dodanie produktu po kliknięciu w przycisk przez zapytanie typu post, przekazuję wartości pól formularza
+        $('#btn1').click(function () {
+            var product = new Object();
+            product.Name = $('#name').val();
+            product.NumberOfPieces = $('#number').val();
+            product.Price = $('#price').val();
+            $.ajax({
+                url: "http://localhost:63619/api/Products",
+                type: 'POST',
+                data: JSON.stringify(product),
+                contentType: 'application/json; charset=utf-8',
+                async: false,
+                timeout: 1000,
+                dataType: 'json',
+                success: function () {
+                    alert("Dodano produkt");
+                    refresh();
+                },
+                error: function (er, err, error) {
+                    alert("Coś poszło nie tak");
+                }
+            });
+        });
+         //Usunięcie produktu po kliknięciu w przycisk przez zapytanie typu DELETE, przekazuję id z formularza
+        $('#btn2').click(function () {
+            var product = new Object();
+            $.ajax({
+                url: "http://localhost:63619/api/Products/" + $("#id").val(),
+                type: 'DELETE',
+                async: false,
+                success: function (data) {
+                    if (!data.Success) {
+                        alert("Nie ma już tego produktu");
+                    }
+                    else {
+                        alert("Usunięto produkt");
+                    }
+                },
+                error: function () {
+                    alert("Coś poszło nie tak");
+                }
+            });
+        });
+        //Edycja produktu po kliknięciu w przycisk przez zapytanie typu POST, przekazuję wartości pól formularza oraz id 
+        $('#btn3').click(function () {
+            var product2 = new Object();
+            product2.Name = $('#name2').val();
+            product2.NumberOfPieces = $('#number2').val();
+            product2.Price = $('#price2').val();
+            $.ajax({
+                url: "http://localhost:63619/api/Products/" + $('#Ide').val(),
+                type: 'POST',
+                data: JSON.stringify(product2),
+                contentType: 'application/json; charset=utf-8',
+                async: false,
+                timeout: 1000,
+                success: function (data) {
+                    if (!data.Success) {
+                        alert("Nie ma produktu o takim id");
+                    }
+                    else {
+                        alert("Zmieniono produkt");
+                    }
+                },
+                error: function (er, err, error) {
+                    alert("Coś poszło nie tak.");
+                }
+            });
+        });
+    });
+    //Funkcja składająca tablicę
+    function refreshResults(scores) {
+        var tbody = "";
+        var allPrice = 0;
+        for (var i = 0; i < scores.length; i++) {
+            var score = scores[i];
+            var totalPrice = (score.NumberOfPieces * score.Price).toFixed(2);
+            allPrice += Number(totalPrice);
+            tbody += "<tr>";
+            tbody += "<td>" + score.Id + "</td>";
+            tbody += "<td>" + score.Name + "</td>";
+            tbody += "<td>" + score.NumberOfPieces + "</td>";
+            tbody += "<td>" + totalPrice + "zł" + "</td>";
+            tbody += "</tr>\r\n";
+        }
+        allPrice = allPrice.toFixed(2);
+        var h2All = $("#all").text(allPrice + "zł");
+        var tbodyElement = $("#results-table tbody");;
+        tbodyElement.children().remove();
+        tbodyElement.append(tbody);
+    };
+    //Funkcja przeszukująca tablicę źróło https://www.w3schools.com/howto/howto_js_filter_table.asp
+    function myFunction() {
+        // Declare variables 
+        var input, filter, table, tr, td, i;
+        input = document.getElementById("myInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementsByClassName("myTable");
+        tr = table[0].getElementsByTagName("tr");
+
+        // Loop through all table rows, and hide those who don't match the search query
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[1];
+            if (td) {
+                if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    };
+   
+</script>
